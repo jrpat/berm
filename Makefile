@@ -18,13 +18,13 @@ out-term := .opt/lib/libqtermwidget5.dylib
 
 
 $(out-lxqt):
-	mkdir -p .build/$(dep-lxqt) ; cd $$_ ; $(cmake) $(root)/$(dep-lxqt)
-	cd .build/$(dep-lxqt) ; make && make install
+	mkdir -p .build/$(dep-lxqt) ; cd $$_ ; \
+		$(cmake) $(root)/$(dep-lxqt) && make && make install
 
 $(out-term): $(out-lxqt)
 	cd $(dep-term) ; git checkout . ; git apply ../*.patch
-	mkdir -p .build/$(dep-term) ; cd $$_ ; $(cmake) $(root)/$(dep-term)
-	cd .build/$(dep-term) ; make && make install
+	mkdir -p .build/$(dep-term) ; cd $$_ ; \
+		$(cmake) $(root)/$(dep-term) && make && make install
 
 app: $(out-term)
 	mkdir -p .build/app ; cd $$_ ; $(cmake) $(root)
