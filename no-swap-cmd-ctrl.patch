@@ -1,0 +1,22 @@
+diff --git a/lib/KeyboardTranslator.cpp b/lib/KeyboardTranslator.cpp
+index c37ec48..d0aa5a7 100644
+--- a/lib/KeyboardTranslator.cpp
++++ b/lib/KeyboardTranslator.cpp
+@@ -50,12 +50,12 @@ const QByteArray KeyboardTranslatorManager::defaultTranslatorText(
+ "key Tab : \"\\t\""
+ );
+ 
+-#ifdef Q_OS_MAC
+-// On Mac, Qt::ControlModifier means Cmd, and MetaModifier means Ctrl
+-const Qt::KeyboardModifier KeyboardTranslator::CTRL_MOD = Qt::MetaModifier;
+-#else
++// #ifdef Q_OS_MAC
++// // On Mac, Qt::ControlModifier means Cmd, and MetaModifier means Ctrl
++// const Qt::KeyboardModifier KeyboardTranslator::CTRL_MOD = Qt::MetaModifier;
++// #else
+ const Qt::KeyboardModifier KeyboardTranslator::CTRL_MOD = Qt::ControlModifier;
+-#endif
++// #endif
+ 
+ KeyboardTranslatorManager::KeyboardTranslatorManager()
+     : _haveLoadedAll(false)

@@ -22,13 +22,15 @@ $(out-lxqt):
 	cd .build/$(dep-lxqt) ; make && make install
 
 $(out-term): $(out-lxqt)
+	cd $(dep-term) ; git checkout . ; git apply ../*.patch
 	mkdir -p .build/$(dep-term) ; cd $$_ ; $(cmake) $(root)/$(dep-term)
 	cd .build/$(dep-term) ; make && make install
 
-
 app: $(out-term)
-	mkdir -p .build/qak ; cd $$_ ; $(cmake) $(root)
-	cd .build/qak ; make
+	mkdir -p .build/app ; cd $$_ ; $(cmake) $(root)
+	cd .build/app ; make
+
+term: $(out-term)
 
 
 clean:

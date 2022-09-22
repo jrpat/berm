@@ -4,6 +4,8 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QDesktopServices>
+#include <QDir>
+#include <QFile>
 #include <QFont>
 #include <QFontDatabase>
 #include <QIcon>
@@ -12,6 +14,7 @@
 #include <QProxyStyle>
 #include <QRegularExpression>
 #include <QStyle>
+#include <QTextStream>
 #include <QtDebug>
 
 #include <functional>
@@ -47,6 +50,25 @@ void add_shortcut(
 }
 
 
+void load_config(QTermWidget* console)
+{
+  QFile f {QDir::homePath() + "/.config/berm/berm.conf"};
+  if (f.open(QIODevice::ReadOnly)) {
+    QTextStream stream (&f);
+    QString line;
+    while (1) {
+      line = stream.readLine();
+      if (line.isNull()) break;
+      auto tokens = line.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+      if (tokens[0] == "color") {
+        console->setColorScheme(tokens[1]);
+      }
+    }
+  }
+  f.close();
+}
+
+
 static int _console_cnt;
 static QTermWidget* _console_active = nullptr;
 
@@ -56,8 +78,8 @@ void new_console(QApplication* app)
   _console_cnt += 1;
 
   console->setTerminalSizeHint(false);
-  console->setColorScheme("SolarizedLight");
-  console->setKeyBindings("macbook");
+  console->setColorScheme("Nord");
+  console->setKeyBindings("default");
   console->setMotionAfterPasting(2); // scroll to end
   console->setTerminalFont(DEFAULT_FONT);
   console->setBidiEnabled(false);
@@ -74,27 +96,16 @@ void new_console(QApplication* app)
     if (--_console_cnt == 0) app->quit();
   };
 
-  add_shortcut(console, QKeySequence("Ctrl+Shift+C"),
-    [=]() { console->copyClipboard(); });
-  add_shortcut(console, QKeySequence("Meta+C"),
-    [=]() { console->copyClipboard(); });
-  add_shortcut(console, QKeySequence("Ctrl+Shift+V"),
-    [=]() { console->pasteClipboard(); });
-  add_shortcut(console, QKeySequence("Meta+V"),
-    [=]() { console->pasteClipboard(); });
-  add_shortcut(console, QKeySequence("Ctrl+Shift+F"),
-    [=]() { console->toggleShowSearchBar(); });
-  add_shortcut(console, QKeySequence("Meta+F"),
-    [=]() { console->toggleShowSearchBar(); });
-  add_shortcut(console, QKeySequence(Qt::META, Qt::Key_Minus),
-    [=]() { console->zoomOut(); });
-  add_shortcut(console, QKeySequence(Qt::META, Qt::Key_Plus),
-    [=]() { console->zoomIn(); });
-  add_shortcut(
-    console, QKeySequence("Meta+n"), [=]() { new_console(app); });
-  add_shortcut(console, QKeySequence("Meta+w"), close_console);
+#define CMD(key, body) \
+  add_shortcut(console, QKeySequence(key), [=]{ body; })
 
-  add_shortcut(console, QKeySequence("Cmd+J"), [=] { console->zoomIn(); });
+  CMD( "Meta+C", console->copyClipboard() );
+  CMD( "Meta+V", console->pasteClipboard() );
+  CMD( "Meta+F", console->toggleShowSearchBar() );
+  CMD( "Meta++", console->zoomIn() );
+  CMD( "Meta+-", console->zoomOut() );
+  CMD( "Meta+N", new_console(app) );
+  CMD( "Meta+W", close_console() );
 
   QObject::connect(
     console, &QTermWidget::urlActivated, [](const QUrl& url, bool) {
@@ -107,12 +118,22 @@ void new_console(QApplication* app)
     [=]() { _console_active = console; });
   if (!_console_active) _console_active = console;
 
+  load_config(console);
+
+//   console->display()->setLineSpacing(10);
+
   console->startShellProgram();
   console->show();
+
+  CMD("Meta+J", console->sendText("\x1b" "[17~"));
+  CMD("Meta+K", console->sendText("\x1b" "[18~"));
+  CMD("Meta+H", console->sendText("\x1b" "[19~"));
+  CMD("Meta+L", console->sendText("\x1b" "[20~"));
 }
 
 int main(int argc, char* argv[])
 {
+  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QCoreApplication::setAttribute(Qt::AA_MacDontSwapCtrlAndMeta, true);
   QApplication* app = new QApplication(argc, argv);
 

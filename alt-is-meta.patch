@@ -1,0 +1,30 @@
+diff --git a/lib/Vt102Emulation.cpp b/lib/Vt102Emulation.cpp
+index 4d5145c..1c2903b 100644
+--- a/lib/Vt102Emulation.cpp
++++ b/lib/Vt102Emulation.cpp
+@@ -1089,6 +1089,13 @@ void Vt102Emulation::sendKeyEvent(QKeyEvent* event, bool fromPaste)
+ 
+             // TODO command handling
+         }
++        else if ( _altIsMeta && (modifiers & Qt::AltModifier) && !event->text().isEmpty() )
++        {
++            if (event->key() >= 0x41 && event->key() <= 0x5a)
++              textToSend += (event->key() + 0x20);
++            else
++              textToSend += event->key();
++        }
+         else if ( !entry.text().isEmpty() )
+         {
+             textToSend += _codec->fromUnicode(QString::fromUtf8(entry.text(true,modifiers)));
+diff --git a/lib/Vt102Emulation.h b/lib/Vt102Emulation.h
+index fdbcecd..f516b5f 100644
+--- a/lib/Vt102Emulation.h
++++ b/lib/Vt102Emulation.h
+@@ -194,6 +194,7 @@ private:
+   QTimer* _titleUpdateTimer;
+ 
+     bool _reportFocusEvents;
++    bool _altIsMeta = true;
+ };
+ 
+ }
